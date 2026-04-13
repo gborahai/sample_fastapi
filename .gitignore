@@ -138,6 +138,9 @@ celerybeat.pid
 .env
 .envrc
 .venv
+
+# SQLite database
+*.db
 env/
 venv/
 ENV/
