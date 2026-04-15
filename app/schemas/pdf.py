@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+
 class PDFResponse(BaseModel):
     id: int
     filename: str
@@ -10,3 +11,8 @@ class PDFResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PDFUploadResponse(PDFResponse):
+    transactions_parsed: int
+    bank: str | None = None
