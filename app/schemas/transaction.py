@@ -46,3 +46,18 @@ class MonthlyReportResponse(BaseModel):
     by_bank: dict[str, BankSummary]
     by_category: dict[str, CategorySummary]
     transactions: list[TransactionResponse]
+
+
+class BankCategorySummary(BaseModel):
+    total: float
+    count: int
+    transactions: list[TransactionResponse]
+
+
+class MonthlyCategoryReportResponse(BaseModel):
+    month: str
+    category: str
+    grand_total: float
+    count: int
+    by_bank: dict[str, BankCategorySummary]
+    transactions: list[TransactionResponse]

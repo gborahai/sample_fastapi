@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.transaction import (
     AnalysisResponse,
+    BankCategorySummary,
     BankSummary,
     CategorySummary,
+    MonthlyCategoryReportResponse,
     MonthlyReportResponse,
     MonthSummary,
     TransactionResponse,
 )
+from app.services.categorizer import CATEGORY_RULES
+
+VALID_CATEGORIES = [cat for cat, _ in CATEGORY_RULES] + ["Other"]
 from app.services import analyser
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
@@ -87,5 +92,42 @@ def get_monthly_report(year: int, month: int, db: Session = Depends(get_db)):
         grand_total=result["grand_total"],
         by_bank=by_bank,
         by_category=by_category,
+        transactions=result["transactions"],
+    )
+
+
+@router.get("/report/{year}/{month}/{category}", response_model=MonthlyCategoryReportResponse)
+def get_monthly_category_report(year: int, month: int, category: str, db: Session = Depends(get_db)):
+    """Return a cross-bank expense report for a specific category and calendar month."""
+    if not (1 <= month <= 12):
+        raise HTTPException(status_code=422, detail="Month must be between 1 and 12")
+    if category not in VALID_CATEGORIES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown category '{category}'. Valid categories: {', '.join(VALID_CATEGORIES)}",
+        )
+
+    result = analyser.get_monthly_category_report(db, year, month, category)
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No '{category}' transactions found for {year}-{month:02d}.",
+        )
+
+    by_bank = {
+        bank_name: BankCategorySummary(
+            total=data["total"],
+            count=data["count"],
+            transactions=data["transactions"],
+        )
+        for bank_name, data in result["by_bank"].items()
+    }
+
+    return MonthlyCategoryReportResponse(
+        month=result["month"],
+        category=result["category"],
+        grand_total=result["grand_total"],
+        count=result["count"],
+        by_bank=by_bank,
         transactions=result["transactions"],
     )
