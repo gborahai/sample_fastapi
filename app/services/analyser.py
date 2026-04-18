@@ -70,6 +70,41 @@ def get_monthly_analysis(db: Session, pdf_id: int) -> dict:
     }
 
 
+def get_monthly_category_report(db: Session, year: int, month: int, category: str) -> dict:
+    """Aggregate transactions for a specific category across all banks for a given calendar month."""
+    transactions = (
+        db.query(Transaction)
+        .filter(
+            extract("year", Transaction.sale_date) == year,
+            extract("month", Transaction.sale_date) == month,
+            Transaction.category == category,
+        )
+        .order_by(Transaction.sale_date)
+        .all()
+    )
+    if not transactions:
+        return {}
+
+    month_key = date(year, month, 1).strftime("%Y-%m")
+    grand_total = 0.0
+    by_bank: dict = defaultdict(lambda: {"total": 0.0, "count": 0, "transactions": []})
+
+    for txn in transactions:
+        grand_total += txn.amount
+        by_bank[txn.bank]["total"] += txn.amount
+        by_bank[txn.bank]["count"] += 1
+        by_bank[txn.bank]["transactions"].append(txn)
+
+    return {
+        "month": month_key,
+        "category": category,
+        "grand_total": round(grand_total, 2),
+        "count": len(transactions),
+        "by_bank": {k: {"total": round(v["total"], 2), "count": v["count"], "transactions": v["transactions"]} for k, v in by_bank.items()},
+        "transactions": transactions,
+    }
+
+
 def get_monthly_report(db: Session, year: int, month: int) -> dict:
     """Aggregate all transactions across all banks for a given calendar month."""
     transactions = (
