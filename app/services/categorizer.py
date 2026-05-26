@@ -8,7 +8,7 @@ CATEGORY_RULES = [
     ]),
     ("Groceries", [
         "WHOLE FOODS", "WHOLEFDS", "SAFEWAY", "COSTCO WHSE",
-        "TRADER JOE", "KROGER", "SPROUTS",
+        "TRADER JOE", "KROGER", "SPROUTS", "FUSION CASH & CARRY",
     ]),
     ("Restaurants & Food Delivery", [
         "URBAN PLATES", "TST*", "DOORDASH", "IN-N-OUT", "DAVES HOT CHICKEN",
